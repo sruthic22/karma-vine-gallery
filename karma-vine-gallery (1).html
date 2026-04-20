@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Karma's Gallery">
+<meta name="theme-color" content="#1a1a2e">
+<title>Karma's Vine Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a1a2e;
+    --navy2: #16213e;
+    --gold: #c8a96e;
+    --gold-light: #e8c98e;
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --text: #1a1a2e;
+    --text2: #6b6660;
+    --text3: #a09890;
+    --border: rgba(26,26,46,0.1);
+    --border2: rgba(26,26,46,0.18);
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    height: 100%;
+    overscroll-behavior: none;
+    background: var(--navy);
+  }
+
+  body {
+    font-family: 'Syne', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    max-width: 430px;
+    margin: 0 auto;
+    position: relative;
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--navy);
+    padding: calc(var(--safe-top) + 18px) 20px 18px;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(200,169,110,0.15);
+    border: 1.5px solid var(--gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  .header-text { flex: 1; }
+
+  .header-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+  }
+
+  .header-sub {
+    font-size: 10px;
+    color: var(--gold);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.8px;
+    margin-top: 1px;
+    text-transform: uppercase;
+  }
+
+  .vine-pill {
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 9px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 14px;
+  }
+
+  .stat {
+    background: rgba(255,255,255,0.06);
+    border-radius: 10px;
+    padding: 10px 14px;
+    border: 0.5px solid rgba(255,255,255,0.08);
+  }
+
+  .stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.3px;
+    margin-top: 2px;
+  }
+
+  /* ── Gallery ── */
+  .gallery {
+    padding: 16px 16px 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 70px 32px;
+  }
+
+  .empty-ring {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 1.5px dashed var(--border2);
+    margin: 0 auto 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .empty-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .empty-hint {
+    font-size: 13px;
+    color: var(--text3);
+    line-height: 1.6;
+  }
+
+  /* ── Photo card ── */
+  .card {
+    background: var(--surface);
+    border-radius: 18px;
+    overflow: hidden;
+    border: 0.5px solid var(--border);
+    animation: cardIn 0.28s cubic-bezier(0.34,1.2,0.64,1);
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .card-photo {
+    width: 100%;
+    aspect-ratio: 4/3;
+    background: var(--surface2);
+    overflow: hidden;
+    position: relative;
+  }
+
+  .card-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-photo-ph {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .new-tag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: var(--navy);
+    color: var(--gold);
+    font-size: 9px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+  }
+
+  .card-body {
+    padding: 13px 16px 12px;
+  }
+
+  .card-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1.3;
+    margin-bottom: 6px;
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-date {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .card-del {
+    font-size: 11px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px 8px;
+    border-radius: 7px;
+    font-family: 'Syne', sans-serif;
+    transition: background 0.15s, color 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .card-del:active { background: #fee2e2; color: #b91c1c; }
+
+  /* ── FAB ── */
+  .fab-area {
+    position: fixed;
+    bottom: calc(var(--safe-bottom) + 24px);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .fab {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--navy);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s;
+    -webkit-appearance: none;
+  }
+
+  .fab:active { transform: scale(0.92); }
+
+  .fab-label {
+    font-size: 10px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.4px;
+  }
+
+  /* ── Bottom Sheet ── */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,20,0.5);
+    z-index: 200;
+    align-items: flex-end;
+    -webkit-backdrop-filter: blur(2px);
+  }
+
+  .overlay.open { display: flex; animation: fadeIn 0.2s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .sheet {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 16px 20px calc(var(--safe-bottom) + 28px);
+    width: 100%;
+    max-height: 92vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    animation: sheetUp 0.25s cubic-bezier(0.34,1.1,0.64,1);
+  }
+
+  @keyframes sheetUp {
+    from { transform: translateY(50px); opacity: 0.5; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    background: var(--border2);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+
+  .sheet-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 18px;
+  }
+
+  /* Photo import zone */
+  .import-zone {
+    background: var(--surface2);
+    border-radius: 14px;
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    margin-bottom: 14px;
+    position: relative;
+    transition: background 0.15s;
+    border: 1.5px dashed var(--border2);
+  }
+
+  .import-zone:active { background: #ede9e0; }
+
+  .import-zone input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+    font-size: 16px; /* prevents iOS zoom */
+  }
+
+  .import-icon {
+    width: 44px;
+    height: 44px;
+    background: var(--navy);
+    border-radius: 12px;
+    margin: 0 auto 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .import-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .import-hint {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'DM Mono', monospace;
+  }
+
+  .preview-box {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    aspect-ratio: 4/3;
+    background: var(--surface2);
+    display: none;
+    position: relative;
+  }
+
+  .preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .change-photo-btn {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(26,26,46,0.75);
+    color: var(--gold);
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    -webkit-appearance: none;
+  }
+
+  .field-label {
+    font-size: 10px;
+    color: var(--text2);
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+  }
+
+  .field-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    font-size: 15px;
+    font-family: 'Syne', sans-serif;
+    color: var(--text);
+    margin-bottom: 14px;
+    outline: none;
+    -webkit-appearance: none;
+    transition: border-color 0.15s;
+  }
+
+  .field-input:focus { border-color: var(--navy); background: #fff; }
+
+  .save-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--navy);
+    color: var(--gold);
+    border: none;
+    border-radius: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'Syne', sans-serif;
+    cursor: pointer;
+    margin-top: 4px;
+    -webkit-appearance: none;
+    transition: background 0.15s;
+    letter-spacing: 0.2px;
+  }
+
+  .save-btn:active { background: #2a2a4e; }
+
+  .cancel-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text3);
+    padding: 12px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    background: none;
+    border: none;
+    -webkit-appearance: none;
+  }
+
+  /* ── Install banner ── */
+  .install-banner {
+    background: var(--navy);
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .install-banner span { flex: 1; line-height: 1.4; }
+
+  .install-banner button {
+    background: var(--gold);
+    color: var(--navy);
+    border: none;
+    border-radius: 6px;
+    padding: 5px 10px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'DM Mono', monospace;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-appearance: none;
+  }
+
+  .install-banner .close-banner {
+    background: none;
+    color: rgba(255,255,255,0.4);
+    padding: 4px;
+    font-size: 14px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Install hint banner (shown only in browser, not when installed) -->
+<div class="install-banner" id="install-banner">
+  <span>Add to Home Screen for the best experience</span>
+  <button onclick="showInstallHelp()">How?</button>
+  <button class="close-banner" onclick="document.getElementById('install-banner').style.display='none'">✕</button>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-row">
+    <div class="avatar">K</div>
+    <div class="header-text">
+      <div class="header-name">Karma's Gallery</div>
+      <div class="header-sub">Amazon Vine Reviewer</div>
+    </div>
+    <div class="vine-pill">Vine</div>
+  </div>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num" id="stat-count">0</div>
+      <div class="stat-lbl">photos</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-latest" style="font-size:14px;margin-top:4px;">—</div>
+      <div class="stat-lbl">latest added</div>
+    </div>
+  </div>
+</div>
+
+<!-- Gallery -->
+<div class="gallery" id="gallery">
+  <div class="empty-state" id="empty-state">
+    <div class="empty-ring">
+      <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#a09890" stroke-width="1.4">
+        <path d="M3 9a2 2 0 012-2h1.172a2 2 0 001.414-.586l.828-.828A2 2 0 019.828 5h4.344a2 2 0 011.414.586l.828.828A2 2 0 0017.828 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+        <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+    </div>
+    <p class="empty-title">No photos yet, Karma!</p>
+    <p class="empty-hint">Tap the + button below to import photos from your iPhone camera roll</p>
+  </div>
+</div>
+
+<!-- FAB -->
+<div class="fab-area">
+  <button class="fab" onclick="openSheet()" aria-label="Add photo">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#c8a96e" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+    </svg>
+  </button>
+  <span class="fab-label">add photo</span>
+</div>
+
+<!-- Bottom sheet overlay -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="sheet" id="sheet">
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">Add a review photo</p>
+
+    <div class="import-zone" id="import-zone">
+      <input type="file" accept="image/*" id="file-input" onchange="onFileSelected(event)">
+      <div class="import-icon">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#c8a96e" stroke-width="1.8">
+          <path d="M3 9a2 2 0 012-2h1.172a2 2 0 001.414-.586l.828-.828A2 2 0 019.828 5h4.344a2 2 0 011.414.586l.828.828A2 2 0 0017.828 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <p class="import-title">Import from Photos</p>
+      <p class="import-hint">tap to open your camera roll</p>
+    </div>
+
+    <div class="preview-box" id="preview-box">
+      <img id="preview-img" src="" alt="Preview">
+      <button class="change-photo-btn" onclick="changePhoto()">change photo</button>
+    </div>
+
+    <label class="field-label">Label / product name</label>
+    <input class="field-input" id="label-input" type="text" placeholder="e.g. Sony WH-1000XM5 — unboxing" autocomplete="off">
+
+    <label class="field-label">Date taken</label>
+    <input class="field-input" id="date-input" type="date">
+
+    <button class="save-btn" onclick="savePhoto()">Save to gallery</button>
+    <button class="cancel-btn" onclick="closeSheet()">Cancel</button>
+  </div>
+</div>
+
+<!-- Install help overlay -->
+<div class="overlay" id="install-overlay" onclick="document.getElementById('install-overlay').classList.remove('open')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">Install on iPhone</p>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px;">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="width:28px;height:28px;background:#1a1a2e;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#c8a96e;font-weight:600;font-family:'DM Mono',monospace;">1</div>
+        <div>
+          <p style="font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:3px;">Open in Safari</p>
+          <p style="font-size:12px;color:#a09890;line-height:1.5;">This file must be open in Safari (not Chrome) for install to work</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="width:28px;height:28px;background:#1a1a2e;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#c8a96e;font-weight:600;font-family:'DM Mono',monospace;">2</div>
+        <div>
+          <p style="font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:3px;">Tap the Share button</p>
+          <p style="font-size:12px;color:#a09890;line-height:1.5;">The box with an arrow pointing up at the bottom of Safari</p>
+        </div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <div style="width:28px;height:28px;background:#1a1a2e;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#c8a96e;font-weight:600;font-family:'DM Mono',monospace;">3</div>
+        <div>
+          <p style="font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:3px;">Tap "Add to Home Screen"</p>
+          <p style="font-size:12px;color:#a09890;line-height:1.5;">Scroll down in the share sheet to find it, then tap Add</p>
+        </div>
+      </div>
+    </div>
+    <button class="save-btn" onclick="document.getElementById('install-overlay').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
+<script>
+  // ── IndexedDB setup ──
+  let db;
+  const DB_NAME = 'KarmaVineGallery';
+  const STORE = 'photos';
+
+  function initDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = e => {
+        const d = e.target.result;
+        if (!d.objectStoreNames.contains(STORE)) {
+          const store = d.createObjectStore(STORE, { keyPath: 'id' });
+          store.createIndex('dateVal', 'dateVal', { unique: false });
+        }
+      };
+      req.onsuccess = e => { db = e.target.result; resolve(); };
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbGetAll() {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readonly');
+      const req = tx.objectStore(STORE).getAll();
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbPut(photo) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      const req = tx.objectStore(STORE).put(photo);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  function dbDelete(id) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE, 'readwrite');
+      const req = tx.objectStore(STORE).delete(id);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // ── State ──
+  let photos = [];
+  let pendingDataUrl = null;
+  let newIds = new Set();
+
+  // ── Date helpers ──
+  function todayStr() {
+    return new Date().toISOString().split('T')[0];
+  }
+
+  function fmtDate(s) {
+    if (!s) return '—';
+    const [y, m, d] = s.split('-');
+    const mo = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return mo[parseInt(m,10)-1] + ' ' + parseInt(d,10) + ', ' + y;
+  }
+
+  function fmtShort(s) {
+    if (!s) return '—';
+    const [y, m, d] = s.split('-');
+    const mo = ['Jan','Feb','Mar','Apr','May','Jun'];
+    return mo[parseInt(m,10)-1] + ' ' + parseInt(d,10);
+  }
+
+  // ── Sheet ──
+  function openSheet() {
+    pendingDataUrl = null;
+    document.getElementById('file-input').value = '';
+    document.getElementById('label-input').value = '';
+    document.getElementById('date-input').value = todayStr();
+    document.getElementById('preview-box').style.display = 'none';
+    document.getElementById('import-zone').style.display = 'block';
+    document.getElementById('overlay').classList.add('open');
+  }
+
+  function closeSheet() {
+    document.getElementById('overlay').classList.remove('open');
+  }
+
+  function overlayClick(e) {
+    if (e.target === document.getElementById('overlay')) closeSheet();
+  }
+
+  function changePhoto() {
+    document.getElementById('preview-box').style.display = 'none';
+    document.getElementById('import-zone').style.display = 'block';
+    pendingDataUrl = null;
+    document.getElementById('file-input').value = '';
+  }
+
+  // ── File selection ──
+  function onFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = ev => {
+      pendingDataUrl = ev.target.result;
+      document.getElementById('preview-img').src = pendingDataUrl;
+      document.getElementById('preview-box').style.display = 'block';
+      document.getElementById('import-zone').style.display = 'none';
+
+      if (!document.getElementById('label-input').value) {
+        const name = file.name
+          .replace(/\.[^/.]+$/, '')
+          .replace(/[-_]/g, ' ')
+          .replace(/^img\s*/i, '')
+          .replace(/^\d+/, '')
+          .trim();
+        if (name) {
+          document.getElementById('label-input').value =
+            name.charAt(0).toUpperCase() + name.slice(1);
+        }
+      }
+
+      if (file.lastModified) {
+        const d = new Date(file.lastModified);
+        const str = d.getFullYear() + '-'
+          + String(d.getMonth()+1).padStart(2,'0') + '-'
+          + String(d.getDate()).padStart(2,'0');
+        document.getElementById('date-input').value = str;
+      }
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── Save photo ──
+  async function savePhoto() {
+    const lbl = document.getElementById('label-input').value.trim() || 'Untitled photo';
+    const dv  = document.getElementById('date-input').value || todayStr();
+    const id  = Date.now();
+
+    const photo = { id, lbl, dateVal: dv, dateDisplay: fmtDate(dv), url: pendingDataUrl };
+    newIds.add(id);
+    setTimeout(() => { newIds.delete(id); }, 1200);
+
+    await dbPut(photo);
+    photos = await dbGetAll();
+    photos.sort((a, b) => b.dateVal.localeCompare(a.dateVal));
+    renderGallery();
+    closeSheet();
+  }
+
+  // ── Delete photo ──
+  async function deletePhoto(id) {
+    if (!confirm('Remove this photo?')) return;
+    await dbDelete(id);
+    photos = await dbGetAll();
+    photos.sort((a, b) => b.dateVal.localeCompare(a.dateVal));
+    renderGallery();
+  }
+
+  // ── Render ──
+  function renderGallery() {
+    const gallery = document.getElementById('gallery');
+    const empty   = document.getElementById('empty-state');
+
+    document.getElementById('stat-count').textContent = photos.length;
+    document.getElementById('stat-latest').textContent =
+      photos.length ? fmtShort(photos[0].dateVal) : '—';
+
+    empty.style.display = photos.length ? 'none' : 'block';
+    gallery.querySelectorAll('.card').forEach(c => c.remove());
+
+    photos.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'card';
+
+      const imgHtml = p.url
+        ? `<img src="${p.url}" alt="${p.lbl}" loading="lazy">`
+        : `<div class="card-photo-ph">
+             <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#c8c0b8" stroke-width="1.2">
+               <path d="M3 9a2 2 0 012-2h1.172a2 2 0 001.414-.586l.828-.828A2 2 0 019.828 5h4.344a2 2 0 011.414.586l.828.828A2 2 0 0017.828 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+               <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+             </svg>
+             <span style="font-size:11px;color:#c8c0b8;font-family:'DM Mono',monospace;">no photo</span>
+           </div>`;
+
+      card.innerHTML = `
+        <div class="card-photo">
+          ${imgHtml}
+          ${newIds.has(p.id) ? '<div class="new-tag">new</div>' : ''}
+        </div>
+        <div class="card-body">
+          <div class="card-label">${p.lbl}</div>
+          <div class="card-footer">
+            <span class="card-date">${p.dateDisplay}</span>
+            <button class="card-del" onclick="deletePhoto(${p.id})">remove</button>
+          </div>
+        </div>`;
+
+      gallery.appendChild(card);
+    });
+  }
+
+  // ── Install banner ──
+  function showInstallHelp() {
+    document.getElementById('install-overlay').classList.add('open');
+  }
+
+  // Hide install banner if already running as standalone PWA
+  if (window.navigator.standalone === true) {
+    document.getElementById('install-banner').style.display = 'none';
+  }
+
+  // ── Boot ──
+  initDB().then(async () => {
+    photos = await dbGetAll();
+    photos.sort((a, b) => b.dateVal.localeCompare(a.dateVal));
+    renderGallery();
+  }).catch(err => {
+    console.error('DB init failed:', err);
+  });
+</script>
+</body>
+</html>

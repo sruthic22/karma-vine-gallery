@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Karma's Gallery">
+<meta name="theme-color" content="#1a1a2e">
+<title>Karma's Vine Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #1a1a2e;
+  --gold: #c8a96e;
+  --bg: #f7f5f0;
+  --surface: #ffffff;
+  --surface2: #f0ede6;
+  --text: #1a1a2e;
+  --text2: #6b6660;
+  --text3: #a09890;
+  --border: rgba(26,26,46,0.1);
+  --border2: rgba(26,26,46,0.18);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overscroll-behavior:none;background:var(--navy)}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);max-width:430px;margin:0 auto;min-height:100vh;min-height:-webkit-fill-available}
+
+.header{background:var(--navy);padding:calc(var(--safe-top) + 18px) 20px 18px;position:sticky;top:0;z-index:50}
+.header-row{display:flex;align-items:center;gap:12px}
+.avatar{width:42px;height:42px;border-radius:50%;background:rgba(200,169,110,0.15);border:1.5px solid var(--gold);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:var(--gold);flex-shrink:0}
+.header-text{flex:1}
+.header-name{font-size:18px;font-weight:700;color:#fff;letter-spacing:-0.3px}
+.header-sub{font-size:10px;color:var(--gold);font-family:'DM Mono',monospace;letter-spacing:0.8px;margin-top:1px;text-transform:uppercase}
+.vine-pill{background:var(--gold);color:var(--navy);font-size:9px;font-weight:600;padding:4px 10px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:0.6px;text-transform:uppercase}
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.stat{background:rgba(255,255,255,0.06);border-radius:10px;padding:10px 14px;border:0.5px solid rgba(255,255,255,0.08)}
+.stat-num{font-size:22px;font-weight:700;color:#fff}
+.stat-lbl{font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;letter-spacing:0.3px;margin-top:2px}
+
+.gallery{padding:16px 16px 120px;display:flex;flex-direction:column;gap:12px}
+.empty-state{text-align:center;padding:70px 32px}
+.empty-ring{width:72px;height:72px;border-radius:50%;border:1.5px dashed var(--border2);margin:0 auto 20px;display:flex;align-items:center;justify-content:center}
+.empty-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:8px}
+.empty-hint{font-size:13px;color:var(--text3);line-height:1.6}
+
+/* Card */
+.card{background:var(--surface);border-radius:18px;overflow:hidden;border:0.5px solid var(--border);animation:cardIn .28s cubic-bezier(0.34,1.2,0.64,1)}
+@keyframes cardIn{from{opacity:0;transform:translateY(14px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+
+/* Single photo */
+.card-photo{width:100%;aspect-ratio:4/3;background:var(--surface2);overflow:hidden;position:relative}
+.card-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.card-photo-ph{width:100%;height:100%;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px}
+
+/* Multi photo strip */
+.photo-strip{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;position:relative}
+.photo-strip::-webkit-scrollbar{display:none}
+.strip-slide{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:4/3;background:var(--surface2);overflow:hidden}
+.strip-slide img{width:100%;height:100%;object-fit:cover;display:block}
+.strip-dots{display:flex;justify-content:center;gap:5px;padding:7px 0 4px;background:var(--surface)}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--border2);transition:background .2s,transform .2s}
+.dot.active{background:var(--navy);transform:scale(1.2)}
+
+.badge-new{position:absolute;top:10px;left:10px;background:var(--navy);color:var(--gold);font-size:9px;padding:3px 9px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:0.6px;text-transform:uppercase;z-index:2}
+.badge-count{position:absolute;top:10px;right:10px;background:rgba(26,26,46,0.7);color:#fff;font-size:10px;padding:3px 9px;border-radius:20px;font-family:'DM Mono',monospace;z-index:2}
+
+.card-body{padding:13px 16px 12px}
+.card-label{font-size:15px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:6px}
+.card-footer{display:flex;align-items:center;justify-content:space-between}
+.card-date{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.card-del{font-size:11px;color:var(--text3);background:none;border:none;cursor:pointer;padding:5px 8px;border-radius:7px;font-family:'Syne',sans-serif;-webkit-appearance:none}
+.card-del:active{background:#fee2e2;color:#b91c1c}
+.card-actions{display:flex;align-items:center;gap:6px}
+/* Native long-press copy — enable callout on all card images */
+.card-photo img,.strip-slide img{-webkit-touch-callout:default !important;user-select:auto !important}
+/* Hold-to-copy hint */
+.hold-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(26,26,46,0.72);color:#fff;font-size:10px;padding:4px 11px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:0.3px;white-space:nowrap;pointer-events:none;animation:hintFade 3.5s ease forwards}
+@keyframes hintFade{0%{opacity:0;transform:translateX(-50%) translateY(4px)}15%{opacity:1;transform:translateX(-50%) translateY(0)}75%{opacity:1}100%{opacity:0}}
+
+/* FAB */
+.fab-area{position:fixed;bottom:calc(var(--safe-bottom) + 24px);left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;align-items:center;gap:10px}
+.fab{width:60px;height:60px;border-radius:50%;background:var(--navy);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .15s;-webkit-appearance:none;box-shadow:0 4px 20px rgba(26,26,46,0.3)}
+.fab:active{transform:scale(0.92)}
+.fab-label{font-size:10px;color:var(--text3);font-family:'DM Mono',monospace;letter-spacing:0.4px}
+
+/* Overlay */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,10,20,0.5);z-index:200;align-items:flex-end;-webkit-backdrop-filter:blur(2px)}
+.overlay.open{display:flex;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{background:var(--surface);border-radius:24px 24px 0 0;padding:16px 20px calc(var(--safe-bottom) + 28px);width:100%;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:sheetUp .25s cubic-bezier(0.34,1.1,0.64,1)}
+@keyframes sheetUp{from{transform:translateY(50px);opacity:.5}to{transform:translateY(0);opacity:1}}
+.sheet-handle{width:36px;height:4px;background:var(--border2);border-radius:2px;margin:0 auto 20px}
+.sheet-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:18px}
+
+/* Drop zone */
+.drop-zone{background:var(--surface2);border-radius:14px;padding:32px 20px;text-align:center;cursor:pointer;margin-bottom:14px;position:relative;transition:background .15s,border-color .15s;border:2px dashed var(--border2)}
+.drop-zone.drag-over{background:#eef6ff;border-color:#3b82f6;border-style:solid}
+.drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:16px}
+.drop-icon{width:48px;height:48px;background:var(--navy);border-radius:14px;margin:0 auto 12px;display:flex;align-items:center;justify-content:center}
+.drop-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px}
+.drop-hint{font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;line-height:1.8}
+.drop-hint b{color:var(--gold);font-weight:500;font-style:normal}
+
+/* Preview grid */
+.previews-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.prev-thumb{aspect-ratio:1;border-radius:8px;overflow:hidden;position:relative;background:var(--surface2)}
+.prev-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.prev-thumb .rm{position:absolute;top:3px;right:3px;width:20px;height:20px;background:rgba(26,26,46,0.75);border-radius:50%;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-appearance:none;padding:0}
+.add-more{aspect-ratio:1;border-radius:8px;border:1.5px dashed var(--border2);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--surface2);position:relative;transition:background .15s}
+.add-more:active{background:#ede9e0}
+.add-more input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;font-size:16px}
+
+.field-label{font-size:10px;color:var(--text2);font-family:'DM Mono',monospace;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px}
+.field-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 14px;font-size:15px;font-family:'Syne',sans-serif;color:var(--text);margin-bottom:14px;outline:none;-webkit-appearance:none;transition:border-color .15s}
+.field-input:focus{border-color:var(--navy);background:#fff}
+.save-btn{width:100%;padding:15px;background:var(--navy);color:var(--gold);border:none;border-radius:14px;font-size:15px;font-weight:600;font-family:'Syne',sans-serif;cursor:pointer;margin-top:4px;-webkit-appearance:none;letter-spacing:.2px}
+.save-btn:active{background:#2a2a4e}
+.cancel-btn{display:block;width:100%;text-align:center;font-size:13px;color:var(--text3);padding:12px;cursor:pointer;font-family:'Syne',sans-serif;background:none;border:none;-webkit-appearance:none}
+
+.install-banner{background:var(--navy);color:rgba(255,255,255,.8);font-size:12px;padding:10px 16px;display:flex;align-items:center;gap:10px;font-family:'DM Mono',monospace}
+.install-banner span{flex:1;line-height:1.4}
+.install-banner .ib-btn{background:var(--gold);color:var(--navy);border:none;border-radius:6px;padding:5px 10px;font-size:10px;font-weight:600;font-family:'DM Mono',monospace;cursor:pointer;flex-shrink:0;-webkit-appearance:none}
+.install-banner .ib-close{background:none;color:rgba(255,255,255,.4);padding:4px;font-size:14px;border:none;cursor:pointer;-webkit-appearance:none}
+</style>
+</head>
+<body>
+
+<div class="install-banner" id="install-banner">
+  <span>Add to Home Screen for the best experience</span>
+  <button class="ib-btn" onclick="showInstallHelp()">How?</button>
+  <button class="ib-close" onclick="this.closest('.install-banner').style.display='none'">✕</button>
+</div>
+
+<div class="header">
+  <div class="header-row">
+    <div class="avatar">K</div>
+    <div class="header-text">
+      <div class="header-name">Karma's Gallery</div>
+      <div class="header-sub">Amazon Vine Reviewer</div>
+    </div>
+    <div class="vine-pill">Vine</div>
+  </div>
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-num" id="stat-listings">0</div>
+      <div class="stat-lbl">listings</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num" id="stat-photos">0</div>
+      <div class="stat-lbl">total photos</div>
+    </div>
+  </div>
+</div>
+
+<div class="gallery" id="gallery">
+  <div class="empty-state" id="empty-state">
+    <div class="empty-ring">
+      <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#a09890" stroke-width="1.4">
+        <path d="M3 9a2 2 0 012-2h1.172a2 2 0 001.414-.586l.828-.828A2 2 0 019.828 5h4.344a2 2 0 011.414.586l.828.828A2 2 0 0017.828 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+        <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+      </svg>
+    </div>
+    <p class="empty-title">No listings yet, Karma!</p>
+    <p class="empty-hint">Tap + to create your first listing.<br>Drag & drop photos or pick from your camera roll.<br>Add multiple photos to one listing!</p>
+  </div>
+</div>
+
+<div class="fab-area">
+  <button class="fab" onclick="openSheet()" aria-label="New listing">
+    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#c8a96e" stroke-width="2.5">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14M5 12h14"/>
+    </svg>
+  </button>
+  <span class="fab-label">new listing</span>
+</div>
+
+<!-- Add sheet -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">New review listing</p>
+
+    <div class="drop-zone" id="drop-zone"
+      ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+      <input type="file" accept="image/*" multiple id="file-input" onchange="onFilesSelected(event)">
+      <div class="drop-icon">
+        <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#c8a96e" stroke-width="1.8">
+          <path d="M3 9a2 2 0 012-2h1.172a2 2 0 001.414-.586l.828-.828A2 2 0 019.828 5h4.344a2 2 0 011.414.586l.828.828A2 2 0 0017.828 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+      <p class="drop-title">Drop photos here</p>
+      <p class="drop-hint">
+        <b>Drag & drop</b> from your desktop<br>
+        or tap to import from camera roll<br>
+        — pick multiple photos at once!
+      </p>
+    </div>
+
+    <div class="previews-grid" id="previews-grid" style="display:none"></div>
+
+    <label class="field-label">Product / listing name</label>
+    <input class="field-input" id="label-input" type="text" placeholder="e.g. Sony WH-1000XM5 headphones" autocomplete="off">
+
+    <label class="field-label">Date</label>
+    <input class="field-input" id="date-input" type="date">
+
+    <button class="save-btn" onclick="saveListing()">Save listing</button>
+    <button class="cancel-btn" onclick="closeSheet()">Cancel</button>
+  </div>
+</div>
+
+<!-- Install help sheet -->
+<div class="overlay" id="install-overlay" onclick="document.getElementById('install-overlay').classList.remove('open')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-handle"></div>
+    <p class="sheet-title">Install on iPhone</p>
+    <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:24px">
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:28px;height:28px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:var(--gold);font-weight:600;font-family:'DM Mono',monospace">1</div>
+        <div><p style="font-size:14px;font-weight:600;margin-bottom:3px">Open in Safari</p><p style="font-size:12px;color:var(--text3);line-height:1.5">Must be Safari (not Chrome) for install to work</p></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:28px;height:28px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:var(--gold);font-weight:600;font-family:'DM Mono',monospace">2</div>
+        <div><p style="font-size:14px;font-weight:600;margin-bottom:3px">Tap the Share button</p><p style="font-size:12px;color:var(--text3);line-height:1.5">The box with an arrow at the bottom of Safari</p></div>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:12px">
+        <div style="width:28px;height:28px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:var(--gold);font-weight:600;font-family:'DM Mono',monospace">3</div>
+        <div><p style="font-size:14px;font-weight:600;margin-bottom:3px">Tap "Add to Home Screen"</p><p style="font-size:12px;color:var(--text3);line-height:1.5">Scroll down in the share sheet, then tap Add</p></div>
+      </div>
+    </div>
+    <button class="save-btn" onclick="document.getElementById('install-overlay').classList.remove('open')">Got it</button>
+  </div>
+</div>
+
+<script>
+// ── IndexedDB ──
+let db;
+const DB_NAME = 'KarmaVineGalleryV2';
+const STORE = 'listings';
+
+function initDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const d = e.target.result;
+      if (!d.objectStoreNames.contains(STORE)) d.createObjectStore(STORE, { keyPath: 'id' });
+    };
+    req.onsuccess = e => { db = e.target.result; resolve(); };
+    req.onerror = () => reject(req.error);
+  });
+}
+function dbGetAll() {
+  return new Promise((res, rej) => {
+    const req = db.transaction(STORE,'readonly').objectStore(STORE).getAll();
+    req.onsuccess = () => res(req.result);
+    req.onerror = () => rej(req.error);
+  });
+}
+function dbPut(item) {
+  return new Promise((res, rej) => {
+    const req = db.transaction(STORE,'readwrite').objectStore(STORE).put(item);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+function dbDelete(id) {
+  return new Promise((res, rej) => {
+    const req = db.transaction(STORE,'readwrite').objectStore(STORE).delete(id);
+    req.onsuccess = () => res();
+    req.onerror = () => rej(req.error);
+  });
+}
+
+// ── State ──
+let listings = [];
+let pendingPhotos = [];
+let newIds = new Set();
+
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function fmtDate(s) {
+  if (!s) return '—';
+  const [y,m,d] = s.split('-');
+  return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+m-1]+' '+parseInt(d)+', '+y;
+}
+
+// ── Sheet ──
+function openSheet() {
+  pendingPhotos = [];
+  document.getElementById('file-input').value = '';
+  document.getElementById('label-input').value = '';
+  document.getElementById('date-input').value = todayStr();
+  document.getElementById('drop-zone').style.display = 'block';
+  const pg = document.getElementById('previews-grid');
+  pg.style.display = 'none';
+  pg.innerHTML = '';
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet() { document.getElementById('overlay').classList.remove('open'); }
+function overlayClick(e) { if (e.target.id === 'overlay') closeSheet(); }
+
+// ── Drag & drop ──
+function onDragOver(e) {
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById('drop-zone').classList.add('drag-over');
+}
+function onDragLeave(e) {
+  e.stopPropagation();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+}
+function onDrop(e) {
+  e.preventDefault(); e.stopPropagation();
+  document.getElementById('drop-zone').classList.remove('drag-over');
+  const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+  if (files.length) processFiles(files);
+}
+function onFilesSelected(e) { processFiles(Array.from(e.target.files)); }
+function onMoreFiles(e) { processFiles(Array.from(e.target.files)); }
+
+function processFiles(files) {
+  let loaded = 0;
+  files.forEach((file, fi) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      pendingPhotos.push({ dataUrl: ev.target.result });
+      loaded++;
+      if (fi === 0 && loaded === 1) {
+        if (!document.getElementById('label-input').value) {
+          const n = file.name.replace(/\.[^/.]+$/,'').replace(/[-_]/g,' ').replace(/^img\s*/i,'').replace(/^\d+/,'').trim();
+          if (n) document.getElementById('label-input').value = n.charAt(0).toUpperCase()+n.slice(1);
+        }
+        if (file.lastModified) {
+          const d = new Date(file.lastModified);
+          document.getElementById('date-input').value =
+            d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+        }
+      }
+      if (loaded === files.length) renderPreviews();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviews() {
+  if (!pendingPhotos.length) {
+    document.getElementById('drop-zone').style.display = 'block';
+    document.getElementById('previews-grid').style.display = 'none';
+    return;
+  }
+  document.getElementById('drop-zone').style.display = 'none';
+  const grid = document.getElementById('previews-grid');
+  grid.style.display = 'grid';
+  grid.innerHTML = '';
+  pendingPhotos.forEach((p, i) => {
+    const t = document.createElement('div');
+    t.className = 'prev-thumb';
+    t.innerHTML = `<img src="${p.dataUrl}" alt="">
+      <button class="rm" onclick="removeThumb(${i})">
+        <svg width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round">
+          <line x1="1" y1="1" x2="9" y2="9"/><line x1="9" y1="1" x2="1" y2="9"/>
+        </svg>
+      </button>`;
+    grid.appendChild(t);
+  });
+  // Add-more tile
+  const a = document.createElement('div');
+  a.className = 'add-more';
+  a.innerHTML = `<input type="file" accept="image/*" multiple onchange="onMoreFiles(event)">
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#a09890" stroke-width="2">
+      <path stroke-linecap="round" d="M12 5v14M5 12h14"/>
+    </svg>`;
+  grid.appendChild(a);
+}
+
+function removeThumb(i) {
+  pendingPhotos.splice(i, 1);
+  renderPreviews();
+}
+
+// ── Save ──
+async function saveListing() {
+  const lbl = document.getElementById('label-input').value.trim() || 'Untitled listing';
+  const dv  = document.getElementById('date-input').value || todayStr();
+  const id  = Date.now();
+  const listing = { id, lbl, dateVal: dv, dateDisplay: fmtDate(dv), photos: pendingPhotos.map(p => p.dataUrl) };
+  newIds.add(id);
+  setTimeout(() => newIds.delete(id), 1400);
+  await dbPut(listing);
+  listings = await dbGetAll();
+  listings.sort((a,b) => b.dateVal.localeCompare(a.dateVal));
+  renderGallery();
+  closeSheet();
+}
+
+// ── Delete ──
+async function deleteListing(id) {
+  if (!confirm('Remove this listing and all its photos?')) return;
+  await dbDelete(id);
+  listings = await dbGetAll();
+  listings.sort((a,b) => b.dateVal.localeCompare(a.dateVal));
+  renderGallery();
+}
+
+// ── Render ──
+function renderGallery() {
+  const gallery = document.getElementById('gallery');
+  const totalPhotos = listings.reduce((s,l) => s + (l.photos ? l.photos.length : 0), 0);
+  document.getElementById('stat-listings').textContent = listings.length;
+  document.getElementById('stat-photos').textContent = totalPhotos;
+  document.getElementById('empty-state').style.display = listings.length ? 'none' : 'block';
+  gallery.querySelectorAll('.card').forEach(c => c.remove());
+
+  listings.forEach(listing => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    const photos = listing.photos || [];
+    const isNew = newIds.has(listing.id);
+    const multi = photos.length > 1;
+
+    let mediaHtml = '';
+    if (!photos.length) {
+      mediaHtml = `<div class="card-photo"><div class="card-photo-ph">
+        <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="#c8c0b8" stroke-width="1.2">
+          <path d="M3 9a2 2 0 012-2h1.172a2 2 0 001.414-.586l.828-.828A2 2 0 019.828 5h4.344a2 2 0 011.414.586l.828.828A2 2 0 0017.828 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+          <path d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        <span style="font-size:11px;color:#c8c0b8;font-family:'DM Mono',monospace">no photos</span>
+      </div></div>`;
+    } else if (!multi) {
+      mediaHtml = `<div class="card-photo" style="position:relative">
+        <img src="${photos[0]}" alt="${listing.lbl}" loading="lazy">
+        ${isNew ? '<div class="badge-new">new</div>' : ''}
+        <div class="hold-hint">hold to copy</div>
+      </div>`;
+    } else {
+      const sid = 'strip-' + listing.id;
+      const slides = photos.map(url => `<div class="strip-slide"><img src="${url}" loading="lazy"></div>`).join('');
+      const dots = photos.map((_,i) => `<div class="dot${i===0?' active':''}" id="dot-${listing.id}-${i}"></div>`).join('');
+      mediaHtml = `
+        <div style="position:relative">
+          <div class="photo-strip" id="${sid}" onscroll="syncDots(this,'${listing.id}')">${slides}</div>
+          ${isNew ? '<div class="badge-new">new</div>' : ''}
+          <div class="badge-count">${photos.length} photos · hold to copy</div>
+        </div>
+        <div class="strip-dots">${dots}</div>`;
+    }
+
+    card.innerHTML = `${mediaHtml}
+      <div class="card-body">
+        <div class="card-label">${listing.lbl}</div>
+        <div class="card-footer">
+          <span class="card-date">${listing.dateDisplay}</span>
+          <div class="card-actions">
+            <button class="card-del" onclick="deleteListing(${listing.id})">remove</button>
+          </div>
+        </div>
+      </div>`;
+    gallery.appendChild(card);
+  });
+}
+
+function showInstallHelp() { document.getElementById('install-overlay').classList.add('open'); }
+
+function syncDots(strip, listingId) {
+  const idx = Math.round(strip.scrollLeft / strip.clientWidth);
+  const listing = listings.find(l => l.id == listingId);
+  if (!listing) return;
+  listing.photos.forEach((_, i) => {
+    const dot = document.getElementById(`dot-${listingId}-${i}`);
+    if (dot) dot.classList.toggle('active', i === idx);
+  });
+}
+
+
+
+
+if (window.navigator.standalone === true) document.getElementById('install-banner').style.display = 'none';
+
+initDB().then(async () => {
+  listings = await dbGetAll();
+  listings.sort((a,b) => b.dateVal.localeCompare(a.dateVal));
+  renderGallery();
+}).catch(console.error);
+</script>
+</body>
+</html>
